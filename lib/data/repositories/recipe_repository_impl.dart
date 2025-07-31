@@ -1,8 +1,10 @@
 import 'package:dartz/dartz.dart';
 import '../../domain/entities/recipe.dart';
+import '../../domain/entities/recipe_category.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../core/errors/failures.dart';
 import '../datasources/recipe_remote_data_source.dart';
+import '../models/category_model.dart';
 
 class RecipeRepositoryImpl implements RecipeRepository {
   final RecipeRemoteDataSource remoteDataSource;
@@ -80,9 +82,12 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getCategories() async {
+  Future<Either<Failure, List<RecipeCategory>>> getCategories() async {
     try {
-      final categories = await remoteDataSource.getCategories();
+      final categoriesData = await remoteDataSource.getCategories();
+      final categories = categoriesData
+          .map((json) => CategoryModel.fromJson(json).toEntity())
+          .toList();
       return Right(categories);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

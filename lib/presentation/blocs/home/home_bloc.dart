@@ -4,15 +4,18 @@ import 'home_states.dart';
 import '../../../domain/entities/recipe.dart';
 import '../../../domain/entities/recipe_category.dart';
 import '../../../domain/usecases/get_recipes.dart';
+import '../../../domain/usecases/get_categories.dart';
 import '../../../core/errors/failures.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetRandomRecipes getRandomRecipes;
   final GetRecipesByCategory getRecipesByCategory;
+  final GetCategories getCategories;
 
   HomeBloc({
     required this.getRandomRecipes,
     required this.getRecipesByCategory,
+    required this.getCategories,
   }) : super(const HomeInitial()) {
     on<HomeStarted>(_onHomeStarted);
     on<HomeSearchChanged>(_onHomeSearchChanged);
@@ -31,10 +34,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       // Get recipes from popular categories for recent section
       final recentResult = await getRecipesByCategory('Beef');
       
-      if (featuredResult.isRight() && recentResult.isRight()) {
+      // Get categories from API
+      final categoriesResult = await getCategories();
+      
+      if (featuredResult.isRight() && recentResult.isRight() && categoriesResult.isRight()) {
         final featuredRecipes = featuredResult.getOrElse(() => []);
         final recentRecipes = recentResult.getOrElse(() => []);
-        final categories = RecipeCategoryData.categories;
+        final categories = categoriesResult.getOrElse(() => []);
         
         emit(HomeLoaded(
           featuredRecipes: featuredRecipes,
@@ -44,7 +50,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       } else {
         final failure = featuredResult.isLeft() 
             ? featuredResult.fold((l) => l, (r) => ServerFailure('Failed to load featured recipes'))
-            : recentResult.fold((l) => l, (r) => ServerFailure('Failed to load recent recipes'));
+            : recentResult.isLeft()
+                ? recentResult.fold((l) => l, (r) => ServerFailure('Failed to load recent recipes'))
+                : categoriesResult.fold((l) => l, (r) => ServerFailure('Failed to load categories'));
         
         emit(HomeError(_mapFailureToMessage(failure)));
       }
