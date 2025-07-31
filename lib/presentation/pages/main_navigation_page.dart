@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navigation_bar.dart';
+import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../../core/constants/app_colors.dart';
 import 'home_page.dart';
 
