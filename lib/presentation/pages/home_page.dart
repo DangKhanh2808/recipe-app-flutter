@@ -8,7 +8,9 @@ import '../blocs/home/home_states.dart';
 import '../widgets/cards/recipe_card.dart';
 import '../widgets/cards/video_recipe_card.dart';
 import '../widgets/cards/category_card.dart';
+import '../widgets/cards/category_recipe_card.dart';
 import '../widgets/common/search_bar_widget.dart';
+import '../widgets/filters/category_filter_widget.dart';
 import 'onboarding_page.dart';
 import 'recipe_detail_page.dart';
 import 'video_player_page.dart';
@@ -208,43 +210,24 @@ class HomeView extends StatelessWidget {
           ),
         ),
         
-        // Categories
+        // Category Filters
         SliverToBoxAdapter(
           child: _buildSectionHeader('Danh mục', 'Xem tất cả'),
         ),
         SliverToBoxAdapter(
-          child: Container(
-            height: 180,
-            margin: const EdgeInsets.only(bottom: 10),
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              scrollDirection: Axis.horizontal,
-              itemCount: state.categories.length,
-              itemBuilder: (context, index) {
-                final category = state.categories[index];
-                return Container(
-                  margin: const EdgeInsets.only(right: 15),
-                  child: CategoryCard(
-                    category: category,
-                    onTap: () {
-                      context.read<HomeBloc>().add(
-                        HomeCategorySelected(category.id),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+          child: CategoryFilterWidget(
+            categories: state.categories,
+            selectedCategoryId: state.selectedCategoryId,
+            onCategorySelected: (categoryId) {
+              context.read<HomeBloc>().add(HomeCategorySelected(categoryId));
+            },
           ),
         ),
         
-        // Recent Recipes
-        SliverToBoxAdapter(
-          child: _buildSectionHeader('Công thức gần đây', 'Xem tất cả'),
-        ),
+        // Category Recipes
         SliverToBoxAdapter(
           child: Container(
-            height: 240,
+            height: 200,
             margin: const EdgeInsets.only(bottom: 10),
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -252,64 +235,23 @@ class HomeView extends StatelessWidget {
               itemCount: state.recentRecipes.length,
               itemBuilder: (context, index) {
                 final recipe = state.recentRecipes[index];
-                return Container(
-                  margin: const EdgeInsets.only(right: 15),
-                  child: RecipeCard(
-                    recipe: recipe,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeDetailPage(recipe: recipe),
-                        ),
-                      );
-                    },
-                  ),
+                return CategoryRecipeCard(
+                  recipe: recipe,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecipeDetailPage(recipe: recipe),
+                      ),
+                    );
+                  },
                 );
               },
             ),
           ),
         ),
         
-        // Load More Button
-        if (!state.hasReachedMax)
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: ElevatedButton(
-                onPressed: state.isLoadingMore
-                    ? null
-                    : () {
-                        context.read<HomeBloc>().add(const HomeLoadMoreRecipes());
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary500,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: state.isLoadingMore
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Tải thêm',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ),
+
         
         // Bottom padding
         const SliverToBoxAdapter(

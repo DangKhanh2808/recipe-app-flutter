@@ -68,9 +68,39 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     }
   }
 
-  void _onHomeCategorySelected(HomeCategorySelected event, Emitter<HomeState> emit) {
-    // Handle category selection
-    print('Category selected: ${event.categoryId}');
+  void _onHomeCategorySelected(HomeCategorySelected event, Emitter<HomeState> emit) async {
+    if (state is HomeLoaded) {
+      final currentState = state as HomeLoaded;
+      emit(currentState.copyWith(isLoadingMore: true));
+      
+      try {
+        // Find category name by ID
+        final selectedCategory = currentState.categories.firstWhere(
+          (category) => category.id == event.categoryId,
+          orElse: () => const RecipeCategory(id: '', name: '', imagePath: '', recipeCount: 0),
+        );
+        
+        if (selectedCategory.id.isNotEmpty) {
+          // Load recipes for selected category
+          final result = await getRecipesByCategory(selectedCategory.name);
+          
+          if (result.isRight()) {
+            final categoryRecipes = result.getOrElse(() => []);
+            emit(currentState.copyWith(
+              recentRecipes: categoryRecipes,
+              selectedCategoryId: event.categoryId,
+              isLoadingMore: false,
+            ));
+          } else {
+            emit(currentState.copyWith(isLoadingMore: false));
+          }
+        } else {
+          emit(currentState.copyWith(isLoadingMore: false));
+        }
+      } catch (e) {
+        emit(currentState.copyWith(isLoadingMore: false));
+      }
+    }
   }
 
   void _onHomeRefresh(HomeRefresh event, Emitter<HomeState> emit) async {

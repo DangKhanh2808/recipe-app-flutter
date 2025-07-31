@@ -24,6 +24,7 @@ class HomeLoaded extends HomeState {
   final String searchQuery;
   final bool isLoadingMore;
   final bool hasReachedMax;
+  final String? selectedCategoryId;
 
   const HomeLoaded({
     required this.featuredRecipes,
@@ -32,6 +33,7 @@ class HomeLoaded extends HomeState {
     this.searchQuery = '',
     this.isLoadingMore = false,
     this.hasReachedMax = false,
+    this.selectedCategoryId,
   });
 
   @override
@@ -42,6 +44,7 @@ class HomeLoaded extends HomeState {
     searchQuery,
     isLoadingMore,
     hasReachedMax,
+    selectedCategoryId,
   ];
 
   HomeLoaded copyWith({
@@ -51,6 +54,7 @@ class HomeLoaded extends HomeState {
     String? searchQuery,
     bool? isLoadingMore,
     bool? hasReachedMax,
+    String? selectedCategoryId,
   }) {
     return HomeLoaded(
       featuredRecipes: featuredRecipes ?? this.featuredRecipes,
@@ -59,6 +63,7 @@ class HomeLoaded extends HomeState {
       searchQuery: searchQuery ?? this.searchQuery,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
     );
   }
 }
