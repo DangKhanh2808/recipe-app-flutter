@@ -3,6 +3,7 @@ import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../../core/constants/app_colors.dart';
 import 'home_page.dart';
 import 'search_page.dart';
+import 'profile_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({Key? key}) : super(key: key);
@@ -18,7 +19,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     const HomePage(),
     const SearchPage(),
     const _FavoritesPage(),
-    const _ProfilePage(),
+    const ProfilePage(),
   ];
 
   @override
@@ -56,18 +57,4 @@ class _FavoritesPage extends StatelessWidget {
   }
 }
 
-class _ProfilePage extends StatelessWidget {
-  const _ProfilePage();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Cá nhân',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-} 
+ 

@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,
+      debugShowCheckedModeBanner: false,
       home: const MainNavigationPage(),
     );
   }
