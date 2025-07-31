@@ -20,6 +20,7 @@ class RecipeModel extends Recipe {
     if (json.containsKey('idMeal')) {
       // This is a TheMealDB meal object
       final parsedData = RecipeParser.parseMealToRecipe(json);
+      
       return RecipeModel(
         id: parsedData['id'],
         name: parsedData['name'],

@@ -3,9 +3,9 @@ class RecipeParser {
     List<String> ingredients = [];
     
     for (int i = 1; i <= 20; i++) {
-      String ingredient = meal['strIngredient$i'];
-      if (ingredient != null && ingredient.isNotEmpty) {
-        ingredients.add(ingredient);
+      String? ingredient = meal['strIngredient$i'];
+      if (ingredient != null && ingredient.trim().isNotEmpty) {
+        ingredients.add(ingredient.trim());
       }
     }
     
@@ -16,9 +16,9 @@ class RecipeParser {
     List<String> measures = [];
     
     for (int i = 1; i <= 20; i++) {
-      String measure = meal['strMeasure$i'];
-      if (measure != null && measure.isNotEmpty) {
-        measures.add(measure);
+      String? measure = meal['strMeasure$i'];
+      if (measure != null && measure.trim().isNotEmpty) {
+        measures.add(measure.trim());
       }
     }
     

@@ -58,7 +58,6 @@ class RecipeRemoteDataSourceImpl implements RecipeRemoteDataSource {
       
       return _parseMealFromResponse(response.data);
     } catch (e) {
-      print('Error getting random recipe: $e');
       return null;
     }
   }

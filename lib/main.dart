@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/injection.dart';
-import 'presentation/blocs/recipe_bloc.dart';
-import 'presentation/pages/recipe_list_page.dart';
+import 'presentation/pages/main_navigation_page.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 
@@ -20,10 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,
-      home: BlocProvider(
-        create: (context) => getIt<RecipeBloc>(),
-        child: const RecipeListPage(),
-      ),
+      home: const MainNavigationPage(),
     );
   }
 }
