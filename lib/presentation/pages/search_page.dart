@@ -36,6 +36,29 @@ class _SearchViewState extends State<SearchView> {
     super.dispose();
   }
 
+  void _handleFiltersApplied(Map<String, String?> filters) {
+    print('Filters applied: $filters');
+    
+    // Build search query from filters
+    final List<String> searchTerms = [];
+    
+    if (filters['category'] != null) {
+      searchTerms.add(filters['category']!);
+    }
+    if (filters['ingredient'] != null) {
+      searchTerms.add(filters['ingredient']!);
+    }
+    if (filters['area'] != null) {
+      searchTerms.add(filters['area']!);
+    }
+    
+    if (searchTerms.isNotEmpty) {
+      final searchQuery = searchTerms.join(' ');
+      _searchController.text = searchQuery;
+      context.read<SearchBloc>().add(SearchSubmitted(searchQuery));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,18 +69,21 @@ class _SearchViewState extends State<SearchView> {
             // Search Bar
             Container(
               padding: const EdgeInsets.all(20),
-              child: SearchBarWidget(
-                controller: _searchController,
-                onChanged: (query) {
-                  context.read<SearchBloc>().add(SearchQueryChanged(query));
-                },
-                onSubmitted: (query) {
-                  if (query.isNotEmpty) {
-                    context.read<SearchBloc>().add(SearchSubmitted(query));
-                  }
-                },
-                hintText: 'Tìm kiếm công thức...',
-              ),
+                              child: SearchBarWidget(
+                  controller: _searchController,
+                  onChanged: (query) {
+                    context.read<SearchBloc>().add(SearchQueryChanged(query));
+                  },
+                  onSubmitted: (query) {
+                    if (query.isNotEmpty) {
+                      context.read<SearchBloc>().add(SearchSubmitted(query));
+                    }
+                  },
+                  hintText: 'Tìm kiếm công thức...',
+                  onFiltersApplied: (filters) {
+                    _handleFiltersApplied(filters);
+                  },
+                ),
             ),
             
             // Search Results/Suggestions

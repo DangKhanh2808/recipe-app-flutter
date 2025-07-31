@@ -1,10 +1,14 @@
 import 'package:dartz/dartz.dart';
 import '../../domain/entities/recipe.dart';
 import '../../domain/entities/recipe_category.dart';
+import '../../domain/entities/recipe_area.dart';
+import '../../domain/entities/recipe_ingredient.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../core/errors/failures.dart';
 import '../datasources/recipe_remote_data_source.dart';
 import '../models/category_model.dart';
+import '../models/area_model.dart';
+import '../models/ingredient_model.dart';
 
 class RecipeRepositoryImpl implements RecipeRepository {
   final RecipeRemoteDataSource remoteDataSource;
@@ -95,9 +99,12 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getAreas() async {
+  Future<Either<Failure, List<RecipeArea>>> getAreas() async {
     try {
-      final areas = await remoteDataSource.getAreas();
+      final areasData = await remoteDataSource.getAreas();
+      final areas = areasData
+          .map((json) => AreaModel.fromJson(json))
+          .toList();
       return Right(areas);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -105,9 +112,12 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getIngredients() async {
+  Future<Either<Failure, List<RecipeIngredient>>> getIngredients() async {
     try {
-      final ingredients = await remoteDataSource.getIngredients();
+      final ingredientsData = await remoteDataSource.getIngredients();
+      final ingredients = ingredientsData
+          .map((json) => IngredientModel.fromJson(json))
+          .toList();
       return Right(ingredients);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

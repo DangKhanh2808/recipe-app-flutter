@@ -82,6 +82,28 @@ class HomeView extends StatelessWidget {
     );
   }
 
+  void _handleFiltersApplied(BuildContext context, Map<String, String?> filters) {
+    print('HomePage - Filters applied: $filters');
+    
+    // Build search query from filters
+    final List<String> searchTerms = [];
+    
+    if (filters['category'] != null) {
+      searchTerms.add(filters['category']!);
+    }
+    if (filters['ingredient'] != null) {
+      searchTerms.add(filters['ingredient']!);
+    }
+    if (filters['area'] != null) {
+      searchTerms.add(filters['area']!);
+    }
+    
+    if (searchTerms.isNotEmpty) {
+      final searchQuery = searchTerms.join(' ');
+      context.read<HomeBloc>().add(HomeSearchChanged(searchQuery));
+    }
+  }
+
   Widget _buildHomeContent(BuildContext context, HomeLoaded state) {
     return CustomScrollView(
       slivers: [
@@ -145,6 +167,9 @@ class HomeView extends StatelessWidget {
               initialValue: state.searchQuery,
               onChanged: (query) {
                 context.read<HomeBloc>().add(HomeSearchChanged(query));
+              },
+              onFiltersApplied: (filters) {
+                _handleFiltersApplied(context, filters);
               },
             ),
           ),

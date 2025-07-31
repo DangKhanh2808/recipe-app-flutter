@@ -194,7 +194,7 @@ class RecipeRemoteDataSourceImpl implements RecipeRemoteDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getCategories() async {
-    return _getListData(AppConstants.categories, 'categories', 'categories');
+    return _getListData(AppConstants.listCategories, 'meals', 'categories');
   }
 
   @override
@@ -218,7 +218,8 @@ class RecipeRemoteDataSourceImpl implements RecipeRemoteDataSource {
       );
       
       if (response.data[dataKey] != null) {
-        return (response.data[dataKey] as List).cast<Map<String, dynamic>>();
+        final data = (response.data[dataKey] as List).cast<Map<String, dynamic>>();
+        return data;
       }
       return [];
     } catch (e) {

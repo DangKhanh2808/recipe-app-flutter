@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:recipe_app/core/constants/app_colors.dart';
+import '../filter/filter_bottom_sheet.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final String hintText;
@@ -8,6 +9,7 @@ class SearchBarWidget extends StatelessWidget {
   final Function(String)? onSubmitted;
   final VoidCallback? onTap;
   final TextEditingController? controller;
+  final Function(Map<String, String?>)? onFiltersApplied;
 
   const SearchBarWidget({
     Key? key,
@@ -17,6 +19,7 @@ class SearchBarWidget extends StatelessWidget {
     this.onSubmitted,
     this.onTap,
     this.controller,
+    this.onFiltersApplied,
   }) : super(key: key);
 
   @override
@@ -60,10 +63,20 @@ class SearchBarWidget extends StatelessWidget {
           ),
           suffixIcon: Container(
             margin: const EdgeInsets.all(12),
-            child: Icon(
-              Icons.tune,
-              color: AppColors.textSecondary,
-              size: 20,
+            child: IconButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => FilterBottomSheet(onFiltersApplied: onFiltersApplied),
+                );
+              },
+              icon: const Icon(
+                Icons.tune,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
             ),
           ),
           border: InputBorder.none,
