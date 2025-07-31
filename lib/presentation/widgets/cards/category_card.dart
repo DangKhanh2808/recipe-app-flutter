@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
-import '../../domain/entities/recipe_category.dart';
+import 'package:recipe_app/core/constants/app_colors.dart';
+import 'package:recipe_app/domain/entities/recipe_category.dart';
+
 
 class CategoryCard extends StatelessWidget {
   final RecipeCategory category;

@@ -5,8 +5,10 @@ import '../../data/repositories/recipe_repository_impl.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../domain/usecases/get_recipes.dart';
 import '../../domain/usecases/get_categories.dart';
+import '../../domain/usecases/search_recipes.dart';
 import '../constants/app_constants.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
+import '../../presentation/blocs/search/search_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -52,6 +54,7 @@ Future<void> init() async {
   getIt.registerLazySingleton(() => SearchRecipesByName(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => GetRecipesByCategory(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => GetCategories(getIt<RecipeRepository>()));
+  getIt.registerLazySingleton(() => SearchRecipes(getIt<RecipeRepository>()));
 
   // Blocs
   getIt.registerFactory(() => HomeBloc(
@@ -59,4 +62,6 @@ Future<void> init() async {
     getRecipesByCategory: getIt<GetRecipesByCategory>(),
     getCategories: getIt<GetCategories>(),
   ));
+  
+  getIt.registerFactory(() => SearchBloc(getIt<SearchRecipes>()));
 } 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
-import '../../domain/entities/recipe.dart';
+import 'package:recipe_app/core/constants/app_colors.dart';
+import 'package:recipe_app/domain/entities/recipe.dart';
+
 
 class VideoRecipeCard extends StatelessWidget {
   final Recipe recipe;

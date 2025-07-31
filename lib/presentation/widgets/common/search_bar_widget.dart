@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:recipe_app/core/constants/app_colors.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final String hintText;
   final String? initialValue;
   final Function(String)? onChanged;
+  final Function(String)? onSubmitted;
   final VoidCallback? onTap;
+  final TextEditingController? controller;
 
   const SearchBarWidget({
     Key? key,
     this.hintText = 'Tìm kiếm công thức...',
     this.initialValue,
     this.onChanged,
+    this.onSubmitted,
     this.onTap,
+    this.controller,
   }) : super(key: key);
 
   @override
@@ -34,10 +38,11 @@ class SearchBarWidget extends StatelessWidget {
         ),
       ),
       child: TextField(
-        controller: initialValue != null 
+        controller: controller ?? (initialValue != null 
             ? TextEditingController(text: initialValue)
-            : null,
+            : null),
         onChanged: onChanged,
+        onSubmitted: onSubmitted,
         onTap: onTap,
         decoration: InputDecoration(
           hintText: hintText,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../../core/constants/app_colors.dart';
 import 'home_page.dart';
+import 'search_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({Key? key}) : super(key: key);
@@ -15,7 +16,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const _SearchPage(),
+    const SearchPage(),
     const _FavoritesPage(),
     const _ProfilePage(),
   ];
@@ -38,21 +39,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 }
 
 // Placeholder pages
-class _SearchPage extends StatelessWidget {
-  const _SearchPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Tìm kiếm',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
 
 class _FavoritesPage extends StatelessWidget {
   const _FavoritesPage();
