@@ -6,10 +6,12 @@ import '../blocs/home/home_bloc.dart';
 import '../blocs/home/home_events.dart';
 import '../blocs/home/home_states.dart';
 import '../widgets/recipe_card.dart';
+import '../widgets/video_recipe_card.dart';
 import '../widgets/category_card.dart';
 import '../widgets/search_bar_widget.dart';
 import 'onboarding_page.dart';
 import 'recipe_detail_page.dart';
+import 'video_player_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -148,13 +150,13 @@ class HomeView extends StatelessWidget {
           ),
         ),
         
-        // Featured Recipes
+        // Featured Video Recipes
         SliverToBoxAdapter(
           child: _buildSectionHeader('Món nổi bật', 'Xem tất cả'),
         ),
         SliverToBoxAdapter(
           child: Container(
-            height: 280,
+            height: 320,
             margin: const EdgeInsets.only(bottom: 10),
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -164,14 +166,13 @@ class HomeView extends StatelessWidget {
                 final recipe = state.featuredRecipes[index];
                 return Container(
                   margin: const EdgeInsets.only(right: 15),
-                  child: RecipeCard(
+                  child: VideoRecipeCard(
                     recipe: recipe,
-                    isFeatured: true,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RecipeDetailPage(recipe: recipe),
+                          builder: (context) => VideoPlayerPage(recipe: recipe),
                         ),
                       );
                     },
