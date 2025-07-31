@@ -12,6 +12,7 @@ import '../constants/app_constants.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/search/search_bloc.dart';
 import '../../presentation/blocs/filter/filter_bloc.dart';
+import '../../presentation/blocs/video_recipe/video_recipe_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -74,5 +75,10 @@ Future<void> init() async {
     getCategories: getIt<GetCategories>(),
     getAreas: getIt<GetAreas>(),
     getIngredients: getIt<GetIngredients>(),
+  ));
+
+  getIt.registerFactory(() => VideoRecipeBloc(
+    getRandomRecipes: getIt<GetRandomRecipes>(),
+    searchRecipesByName: getIt<SearchRecipesByName>(),
   ));
 } 

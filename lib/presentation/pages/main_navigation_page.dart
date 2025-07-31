@@ -3,6 +3,7 @@ import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../../core/constants/app_colors.dart';
 import 'home_page.dart';
 import 'search_page.dart';
+import 'video_recipe_page.dart';
 import 'profile_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
@@ -18,7 +19,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   final List<Widget> _pages = [
     const HomePage(),
     const SearchPage(),
-    const _FavoritesPage(),
+    const VideoRecipePage(),
     const ProfilePage(),
   ];
 
@@ -35,26 +36,13 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           });
         },
       ),
+
     );
   }
+
+
 }
 
-// Placeholder pages
-
-class _FavoritesPage extends StatelessWidget {
-  const _FavoritesPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Yêu thích',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
+// Placeholder pages removed - replaced with VideoRecipePage
 
  
