@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../models/recipe_model.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/errors/failures.dart';
 
 abstract class RecipeRemoteDataSource {
   Future<List<RecipeModel>> getRandomRecipes();
@@ -17,151 +18,212 @@ abstract class RecipeRemoteDataSource {
 
 class RecipeRemoteDataSourceImpl implements RecipeRemoteDataSource {
   final Dio dio;
+  static const int _maxRecipes = 10;
+  static const int _timeoutSeconds = 10;
 
   RecipeRemoteDataSourceImpl(this.dio);
 
   @override
   Future<List<RecipeModel>> getRandomRecipes() async {
     try {
-      // Get 10 random recipes by calling random endpoint multiple times
-      List<RecipeModel> recipes = [];
-      for (int i = 0; i < 10; i++) {
-        final response = await dio.get(AppConstants.randomMeal);
-        if (response.data['meals'] != null && response.data['meals'].isNotEmpty) {
-          final meal = response.data['meals'][0];
-          recipes.add(RecipeModel.fromJson(meal));
+      final recipes = <RecipeModel>[];
+      
+      // Get initial random recipe
+      final randomRecipe = await _getSingleRandomRecipe();
+      if (randomRecipe != null) {
+        recipes.add(randomRecipe);
+      }
+      
+      // Get more recipes from popular categories
+      if (recipes.isNotEmpty) {
+        final moreRecipes = await _getRecipesFromPopularCategories();
+        recipes.addAll(moreRecipes);
+      }
+      
+      return recipes.take(_maxRecipes).toList();
+    } catch (e) {
+      throw ServerFailure('Failed to load recipes: $e');
+    }
+  }
+
+  Future<RecipeModel?> _getSingleRandomRecipe() async {
+    try {
+      final response = await dio.get(
+        AppConstants.randomMeal,
+        options: Options(
+          sendTimeout: Duration(seconds: _timeoutSeconds),
+          receiveTimeout: Duration(seconds: _timeoutSeconds),
+        ),
+      );
+      
+      return _parseMealFromResponse(response.data);
+    } catch (e) {
+      print('Error getting random recipe: $e');
+      return null;
+    }
+  }
+
+  Future<List<RecipeModel>> _getRecipesFromPopularCategories() async {
+    final recipes = <RecipeModel>[];
+    final popularCategories = ['Chicken', 'Beef', 'Seafood', 'Vegetarian'];
+    
+    for (final category in popularCategories) {
+      if (recipes.length >= _maxRecipes) break;
+      
+      try {
+        final categoryRecipes = await _getRecipesFromCategory(category, limit: 3);
+        recipes.addAll(categoryRecipes);
+      } catch (e) {
+        print('Error getting recipes from category $category: $e');
+        continue;
+      }
+    }
+    
+    return recipes;
+  }
+
+  Future<List<RecipeModel>> _getRecipesFromCategory(String category, {int limit = 3}) async {
+    try {
+      final response = await dio.get(
+        '${AppConstants.filterByCategory}$category',
+        options: Options(
+          sendTimeout: Duration(seconds: _timeoutSeconds),
+          receiveTimeout: Duration(seconds: _timeoutSeconds),
+        ),
+      );
+      
+      final meals = _parseMealsListFromResponse(response.data);
+      final recipes = <RecipeModel>[];
+      
+      for (final meal in meals.take(limit)) {
+        final recipeId = meal['idMeal'];
+        if (recipeId != null) {
+          try {
+            final fullRecipe = await getRecipeById(recipeId);
+            recipes.add(fullRecipe);
+          } catch (e) {
+            print('Error getting full recipe for ID $recipeId: $e');
+            continue;
+          }
         }
       }
+      
       return recipes;
     } catch (e) {
-      throw Exception('Failed to load random recipes: $e');
+      throw ServerFailure('Failed to get recipes from category $category: $e');
     }
+  }
+
+  // Helper methods for parsing responses
+  RecipeModel? _parseMealFromResponse(Map<String, dynamic> data) {
+    if (data['meals'] != null && data['meals'].isNotEmpty) {
+      return RecipeModel.fromJson(data['meals'][0]);
+    }
+    return null;
+  }
+
+  List<Map<String, dynamic>> _parseMealsListFromResponse(Map<String, dynamic> data) {
+    if (data['meals'] != null) {
+      return (data['meals'] as List).cast<Map<String, dynamic>>();
+    }
+    return [];
   }
 
   @override
   Future<RecipeModel> getRecipeById(String id) async {
     try {
-      final response = await dio.get('${AppConstants.lookupById}$id');
-      if (response.data['meals'] != null && response.data['meals'].isNotEmpty) {
-        return RecipeModel.fromJson(response.data['meals'][0]);
+      final response = await dio.get(
+        '${AppConstants.lookupById}$id',
+        options: Options(
+          sendTimeout: Duration(seconds: _timeoutSeconds),
+          receiveTimeout: Duration(seconds: _timeoutSeconds),
+        ),
+      );
+      
+      final recipe = _parseMealFromResponse(response.data);
+      if (recipe != null) {
+        return recipe;
       }
-      throw Exception('Recipe not found');
+      throw ServerFailure('Recipe not found');
     } catch (e) {
-      throw Exception('Failed to load recipe: $e');
+      if (e is ServerFailure) rethrow;
+      throw ServerFailure('Failed to load recipe: $e');
     }
   }
 
   @override
   Future<List<RecipeModel>> searchRecipesByName(String query) async {
-    try {
-      final response = await dio.get('${AppConstants.searchByName}$query');
-      if (response.data['meals'] != null) {
-        return (response.data['meals'] as List)
-            .map((json) => RecipeModel.fromJson(json))
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to search recipes: $e');
-    }
+    return _searchRecipes('${AppConstants.searchByName}$query', 'name');
   }
 
   @override
   Future<List<RecipeModel>> searchRecipesByFirstLetter(String letter) async {
-    try {
-      final response = await dio.get('${AppConstants.searchByFirstLetter}$letter');
-      if (response.data['meals'] != null) {
-        return (response.data['meals'] as List)
-            .map((json) => RecipeModel.fromJson(json))
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to search recipes by letter: $e');
-    }
+    return _searchRecipes('${AppConstants.searchByFirstLetter}$letter', 'letter');
   }
 
   @override
   Future<List<RecipeModel>> getRecipesByCategory(String category) async {
-    try {
-      final response = await dio.get('${AppConstants.filterByCategory}$category');
-      if (response.data['meals'] != null) {
-        return (response.data['meals'] as List)
-            .map((json) => RecipeModel.fromJson(json))
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to load recipes by category: $e');
-    }
+    return _searchRecipes('${AppConstants.filterByCategory}$category', 'category');
   }
 
   @override
   Future<List<RecipeModel>> getRecipesByArea(String area) async {
-    try {
-      final response = await dio.get('${AppConstants.filterByArea}$area');
-      if (response.data['meals'] != null) {
-        return (response.data['meals'] as List)
-            .map((json) => RecipeModel.fromJson(json))
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to load recipes by area: $e');
-    }
+    return _searchRecipes('${AppConstants.filterByArea}$area', 'area');
   }
 
   @override
   Future<List<RecipeModel>> getRecipesByIngredient(String ingredient) async {
+    return _searchRecipes('${AppConstants.filterByIngredient}$ingredient', 'ingredient');
+  }
+
+  Future<List<RecipeModel>> _searchRecipes(String endpoint, String searchType) async {
     try {
-      final response = await dio.get('${AppConstants.filterByIngredient}$ingredient');
-      if (response.data['meals'] != null) {
-        return (response.data['meals'] as List)
-            .map((json) => RecipeModel.fromJson(json))
-            .toList();
-      }
-      return [];
+      final response = await dio.get(
+        endpoint,
+        options: Options(
+          sendTimeout: Duration(seconds: _timeoutSeconds),
+          receiveTimeout: Duration(seconds: _timeoutSeconds),
+        ),
+      );
+      
+      final meals = _parseMealsListFromResponse(response.data);
+      return meals.map((json) => RecipeModel.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Failed to load recipes by ingredient: $e');
+      throw ServerFailure('Failed to search recipes by $searchType: $e');
     }
   }
 
   @override
   Future<List<Map<String, dynamic>>> getCategories() async {
-    try {
-      final response = await dio.get(AppConstants.categories);
-      if (response.data['categories'] != null) {
-        return (response.data['categories'] as List).cast<Map<String, dynamic>>();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to load categories: $e');
-    }
+    return _getListData(AppConstants.categories, 'categories', 'categories');
   }
 
   @override
   Future<List<Map<String, dynamic>>> getAreas() async {
-    try {
-      final response = await dio.get(AppConstants.listAreas);
-      if (response.data['meals'] != null) {
-        return (response.data['meals'] as List).cast<Map<String, dynamic>>();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to load areas: $e');
-    }
+    return _getListData(AppConstants.listAreas, 'meals', 'areas');
   }
 
   @override
   Future<List<Map<String, dynamic>>> getIngredients() async {
+    return _getListData(AppConstants.listIngredients, 'meals', 'ingredients');
+  }
+
+  Future<List<Map<String, dynamic>>> _getListData(String endpoint, String dataKey, String dataType) async {
     try {
-      final response = await dio.get(AppConstants.listIngredients);
-      if (response.data['meals'] != null) {
-        return (response.data['meals'] as List).cast<Map<String, dynamic>>();
+      final response = await dio.get(
+        endpoint,
+        options: Options(
+          sendTimeout: Duration(seconds: _timeoutSeconds),
+          receiveTimeout: Duration(seconds: _timeoutSeconds),
+        ),
+      );
+      
+      if (response.data[dataKey] != null) {
+        return (response.data[dataKey] as List).cast<Map<String, dynamic>>();
       }
       return [];
     } catch (e) {
-      throw Exception('Failed to load ingredients: $e');
+      throw ServerFailure('Failed to load $dataType: $e');
     }
   }
 } 

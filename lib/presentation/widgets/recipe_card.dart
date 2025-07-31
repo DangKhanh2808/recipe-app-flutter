@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/recipe.dart';
+import '../../core/constants/app_colors.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
@@ -10,13 +11,12 @@ class RecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (recipe.imageUrl != null)
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 recipe.imageUrl!,
                 width: double.infinity,
@@ -26,8 +26,12 @@ class RecipeCard extends StatelessWidget {
                   return Container(
                     width: double.infinity,
                     height: 200,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.restaurant, size: 50, color: Colors.grey),
+                    color: AppColors.neutral200,
+                    child: Icon(
+                      Icons.restaurant,
+                      size: 50,
+                      color: AppColors.neutral400,
+                    ),
                   );
                 },
               ),
@@ -42,17 +46,22 @@ class RecipeCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 if (recipe.category != null)
                   Row(
                     children: [
-                      const Icon(Icons.category, size: 16, color: Colors.grey),
+                      Icon(
+                        Icons.category,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         recipe.category!,
-                        style: const TextStyle(color: Colors.grey),
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -60,11 +69,15 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                      Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         recipe.area!,
-                        style: const TextStyle(color: Colors.grey),
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -73,7 +86,10 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Ingredients: ${recipe.ingredients.take(3).join(', ')}${recipe.ingredients.length > 3 ? '...' : ''}',
-                    style: const TextStyle(fontSize: 14),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textTertiary,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

@@ -14,8 +14,25 @@ Future<void> init() async {
   getIt.registerLazySingleton<Dio>(() {
     final dio = Dio();
     dio.options.baseUrl = AppConstants.baseUrl;
-    dio.options.connectTimeout = const Duration(seconds: 30);
-    dio.options.receiveTimeout = const Duration(seconds: 30);
+    dio.options.connectTimeout = const Duration(seconds: 15);
+    dio.options.receiveTimeout = const Duration(seconds: 15);
+    
+    // Add interceptors for better error handling
+    dio.interceptors.add(InterceptorsWrapper(
+      onError: (error, handler) {
+        print('Dio Error: ${error.message}');
+        handler.next(error);
+      },
+      onRequest: (options, handler) {
+        print('Dio Request: ${options.path}');
+        handler.next(options);
+      },
+      onResponse: (response, handler) {
+        print('Dio Response: ${response.statusCode}');
+        handler.next(response);
+      },
+    ));
+    
     return dio;
   });
 

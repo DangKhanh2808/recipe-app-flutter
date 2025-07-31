@@ -4,6 +4,7 @@ import 'core/di/injection.dart';
 import 'presentation/blocs/recipe_bloc.dart';
 import 'presentation/pages/recipe_list_page.dart';
 import 'core/constants/app_constants.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: AppConstants.appName,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
       home: BlocProvider(
         create: (context) => getIt<RecipeBloc>(),
         child: const RecipeListPage(),
