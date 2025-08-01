@@ -43,6 +43,4 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
 }
 
-// Placeholder pages removed - replaced with VideoRecipePage
-
  

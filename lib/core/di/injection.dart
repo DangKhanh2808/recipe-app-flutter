@@ -1,9 +1,14 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import '../../data/datasources/recipe_remote_data_source.dart';
+import '../../data/datasources/recipe_local_data_source.dart';
 import '../../data/repositories/recipe_repository_impl.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../domain/usecases/get_recipes.dart';
+import '../../domain/usecases/get_recipe_by_id.dart';
+import '../../domain/usecases/toggle_favorite_recipe.dart';
+import '../../domain/usecases/check_favorite_recipe.dart';
+import '../../domain/usecases/get_favorite_recipes.dart';
 import '../../domain/usecases/get_categories.dart';
 import '../../domain/usecases/get_areas.dart';
 import '../../domain/usecases/get_ingredients.dart';
@@ -13,6 +18,7 @@ import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/search/search_bloc.dart';
 import '../../presentation/blocs/filter/filter_bloc.dart';
 import '../../presentation/blocs/video_recipe/video_recipe_bloc.dart';
+import '../../presentation/blocs/favorite/favorite_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -24,22 +30,6 @@ Future<void> init() async {
     dio.options.connectTimeout = const Duration(seconds: 15);
     dio.options.receiveTimeout = const Duration(seconds: 15);
     
-    // Add interceptors for better error handling
-    dio.interceptors.add(InterceptorsWrapper(
-      onError: (error, handler) {
-        print('Dio Error: ${error.message}');
-        handler.next(error);
-      },
-      onRequest: (options, handler) {
-        print('Dio Request: ${options.path}');
-        handler.next(options);
-      },
-      onResponse: (response, handler) {
-        print('Dio Response: ${response.statusCode}');
-        handler.next(response);
-      },
-    ));
-    
     return dio;
   });
 
@@ -47,26 +37,37 @@ Future<void> init() async {
   getIt.registerLazySingleton<RecipeRemoteDataSource>(
     () => RecipeRemoteDataSourceImpl(getIt<Dio>()),
   );
+  getIt.registerLazySingleton<RecipeLocalDataSource>(
+    () => RecipeLocalDataSourceImpl(),
+  );
 
   // Repositories
   getIt.registerLazySingleton<RecipeRepository>(
-    () => RecipeRepositoryImpl(getIt<RecipeRemoteDataSource>()),
+    () => RecipeRepositoryImpl(
+      getIt<RecipeRemoteDataSource>(),
+      getIt<RecipeLocalDataSource>(),
+    ),
   );
 
   // Use cases
   getIt.registerLazySingleton(() => GetRandomRecipes(getIt<RecipeRepository>()));
+  getIt.registerLazySingleton(() => GetRecipeById(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => SearchRecipesByName(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => GetRecipesByCategory(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => GetCategories(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => GetAreas(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => GetIngredients(getIt<RecipeRepository>()));
   getIt.registerLazySingleton(() => SearchRecipes(getIt<RecipeRepository>()));
+  getIt.registerLazySingleton(() => ToggleFavoriteRecipe(getIt<RecipeRepository>()));
+  getIt.registerLazySingleton(() => CheckFavoriteRecipe(getIt<RecipeRepository>()));
+  getIt.registerLazySingleton(() => GetFavoriteRecipes(getIt<RecipeRepository>()));
 
   // Blocs
   getIt.registerFactory(() => HomeBloc(
     getRandomRecipes: getIt<GetRandomRecipes>(),
     getRecipesByCategory: getIt<GetRecipesByCategory>(),
     getCategories: getIt<GetCategories>(),
+    getIngredients: getIt<GetIngredients>(),
   ));
   
   getIt.registerFactory(() => SearchBloc(getIt<SearchRecipes>()));
@@ -80,5 +81,11 @@ Future<void> init() async {
   getIt.registerFactory(() => VideoRecipeBloc(
     getRandomRecipes: getIt<GetRandomRecipes>(),
     searchRecipesByName: getIt<SearchRecipesByName>(),
+  ));
+  
+  getIt.registerFactory(() => FavoriteBloc(
+    toggleFavoriteRecipe: getIt<ToggleFavoriteRecipe>(),
+    checkFavoriteRecipe: getIt<CheckFavoriteRecipe>(),
+    getFavoriteRecipes: getIt<GetFavoriteRecipes>(),
   ));
 } 

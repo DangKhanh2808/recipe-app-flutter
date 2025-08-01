@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:recipe_app/presentation/pages/onboarding_page.dart';
 import 'core/di/injection.dart';
 import 'presentation/pages/main_navigation_page.dart';
 import 'core/constants/app_constants.dart';
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      home: const MainNavigationPage(),
+      home: const OnboardingPage(),
     );
   }
 }

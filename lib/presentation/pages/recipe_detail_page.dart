@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/di/injection.dart';
 import '../../domain/entities/recipe.dart';
+import '../blocs/favorite/favorite_bloc.dart';
+import '../blocs/favorite/favorite_events.dart';
+import '../blocs/favorite/favorite_states.dart';
 
 class RecipeDetailPage extends StatelessWidget {
   final Recipe recipe;
@@ -12,197 +17,221 @@ class RecipeDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // App Bar with Image
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: AppColors.surface,
-            elevation: 0,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.surface.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
+    return BlocProvider(
+      create: (context) => getIt<FavoriteBloc>()..add(const LoadFavorites()),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: CustomScrollView(
+          slivers: [
+            // App Bar with Image
+            SliverAppBar(
+              expandedHeight: 300,
+              pinned: true,
+              backgroundColor: AppColors.surface,
+              elevation: 0,
+              leading: IconButton(
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.surface.withOpacity(0.8),
+                    color: AppColors.surface.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.favorite_border,
+                    Icons.arrow_back,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                onPressed: () {
-                  // Add to favorites
-                },
+                onPressed: () => Navigator.pop(context),
               ),
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.share,
-                    color: AppColors.textPrimary,
-                  ),
+              actions: [
+                BlocBuilder<FavoriteBloc, FavoriteState>(
+                  builder: (context, favoriteState) {
+                    final isFavorite = favoriteState is FavoriteLoaded 
+                        ? favoriteState.favoriteStatus[recipe.id] ?? false
+                        : false;
+                    final isLoading = favoriteState is FavoriteLoaded 
+                        ? favoriteState.isLoading
+                        : false;
+                    
+                    return IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Icon(
+                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                color: isFavorite ? AppColors.error : AppColors.textPrimary,
+                              ),
+                      ),
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              context.read<FavoriteBloc>().add(
+                                ToggleFavorite(recipe.id),
+                              );
+                            },
+                    );
+                  },
                 ),
-                onPressed: () {
-                  // Share recipe
-                },
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: recipe.imageUrl != null
-                  ? Image.network(
-                      recipe.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildImagePlaceholder();
-                      },
-                    )
-                  : _buildImagePlaceholder(),
-            ),
-          ),
-          
-          // Recipe Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Recipe Title
-                  Text(
-                    recipe.name,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.share,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  
-                  // Recipe Info
-                  Row(
-                    children: [
-                      if (recipe.category != null) ...[
-                        _buildInfoChip(
-                          Icons.category,
-                          recipe.category!,
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      if (recipe.area != null) ...[
-                        _buildInfoChip(
-                          Icons.location_on,
-                          recipe.area!,
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Ingredients Section
-                  _buildSectionTitle('Nguyên liệu'),
-                  const SizedBox(height: 12),
-                  _buildIngredientsList(),
-                  const SizedBox(height: 24),
-                  
-                  // Instructions Section
-                  _buildSectionTitle('Cách làm'),
-                  const SizedBox(height: 12),
-                  _buildInstructionsText(),
-                  const SizedBox(height: 24),
-                  
-                  // Tags Section
-                  if (recipe.tags != null && recipe.tags!.isNotEmpty) ...[
-                    _buildSectionTitle('Tags'),
-                    const SizedBox(height: 12),
-                    _buildTagsList(),
-                    const SizedBox(height: 24),
-                  ],
-                  
-                  // YouTube Link
-                  if (recipe.youtube != null) ...[
-                    _buildSectionTitle('Video hướng dẫn'),
-                    const SizedBox(height: 12),
-                    _buildYouTubeButton(),
-                    const SizedBox(height: 24),
-                  ],
-                  
-                  // Bottom padding
-                  const SizedBox(height: 40),
-                ],
+                  onPressed: () {
+                    // Share recipe
+                  },
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: recipe.imageUrl != null
+                    ? Image.network(
+                        recipe.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildImagePlaceholder();
+                        },
+                      )
+                    : _buildImagePlaceholder(),
               ),
             ),
-          ),
-        ],
-      ),
-      
-      // Bottom Action Bar
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadowLight,
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Start cooking
-                },
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Bắt đầu nấu'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary500,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            
+            // Recipe Content
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Recipe Title
+                    Text(
+                      recipe.name,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Recipe Info
+                    Row(
+                      children: [
+                        if (recipe.category != null) ...[
+                          _buildInfoChip(
+                            Icons.category,
+                            recipe.category!,
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        if (recipe.area != null) ...[
+                          _buildInfoChip(
+                            Icons.location_on,
+                            recipe.area!,
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Ingredients Section
+                    _buildSectionTitle('Nguyên liệu'),
+                    const SizedBox(height: 12),
+                    _buildIngredientsList(),
+                    const SizedBox(height: 24),
+                    
+                    // Instructions Section
+                    _buildSectionTitle('Cách làm'),
+                    const SizedBox(height: 12),
+                    _buildInstructionsText(),
+                    const SizedBox(height: 24),
+                    
+                    // Tags Section
+                    if (recipe.tags != null && recipe.tags!.isNotEmpty) ...[
+                      _buildSectionTitle('Tags'),
+                      const SizedBox(height: 12),
+                      _buildTagsList(),
+                      const SizedBox(height: 24),
+                    ],
+                    
+                    // YouTube Link
+                    if (recipe.youtube != null) ...[
+                      _buildSectionTitle('Video hướng dẫn'),
+                      const SizedBox(height: 12),
+                      _buildYouTubeButton(),
+                      const SizedBox(height: 24),
+                    ],
+                    
+                    // Bottom padding
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.neutral100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.bookmark_add,
-                color: AppColors.primary500,
-              ),
-            ),
           ],
+        ),
+        
+        // Bottom Action Bar
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowLight,
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Start cooking
+                  },
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Bắt đầu nấu'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary500,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.neutral100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.bookmark_add,
+                  color: AppColors.primary500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -306,7 +335,7 @@ class RecipeDetailPage extends StatelessWidget {
                   ),
                 ),
                 if (measure.isNotEmpty) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Text(
                     measure,
                     style: const TextStyle(

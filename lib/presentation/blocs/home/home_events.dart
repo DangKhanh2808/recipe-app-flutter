@@ -35,4 +35,13 @@ class HomeRefresh extends HomeEvent {
 
 class HomeLoadMoreRecipes extends HomeEvent {
   const HomeLoadMoreRecipes();
+}
+
+class HomeIngredientSelected extends HomeEvent {
+  final String ingredientId;
+
+  const HomeIngredientSelected(this.ingredientId);
+
+  @override
+  List<Object?> get props => [ingredientId];
 } 

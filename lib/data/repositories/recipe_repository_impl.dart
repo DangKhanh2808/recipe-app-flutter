@@ -6,14 +6,17 @@ import '../../domain/entities/recipe_ingredient.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../core/errors/failures.dart';
 import '../datasources/recipe_remote_data_source.dart';
+import '../datasources/recipe_local_data_source.dart';
 import '../models/category_model.dart';
 import '../models/area_model.dart';
 import '../models/ingredient_model.dart';
+import '../models/recipe_model.dart';
 
 class RecipeRepositoryImpl implements RecipeRepository {
   final RecipeRemoteDataSource remoteDataSource;
+  final RecipeLocalDataSource localDataSource;
 
-  RecipeRepositoryImpl(this.remoteDataSource);
+  RecipeRepositoryImpl(this.remoteDataSource, this.localDataSource);
 
   @override
   Future<Either<Failure, List<Recipe>>> getRandomRecipes() async {
@@ -121,6 +124,53 @@ class RecipeRepositoryImpl implements RecipeRepository {
       return Right(ingredients);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> toggleFavoriteRecipe(String recipeId) async {
+    try {
+      final isFavorite = await localDataSource.toggleFavoriteRecipe(recipeId);
+      
+      if (isFavorite) {
+        // If we're adding to favorites, we need to get the recipe data first
+        final recipeResult = await getRecipeById(recipeId);
+        return recipeResult.fold(
+          (failure) => Left(failure),
+          (recipe) async {
+            try {
+              await localDataSource.saveFavoriteRecipe(RecipeModel.fromEntity(recipe));
+              return Right(true);
+            } catch (e) {
+              return Left(CacheFailure(e.toString()));
+            }
+          },
+        );
+      } else {
+        return Right(false);
+      }
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> isFavoriteRecipe(String recipeId) async {
+    try {
+      final isFavorite = await localDataSource.isFavoriteRecipe(recipeId);
+      return Right(isFavorite);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Recipe>>> getFavoriteRecipes() async {
+    try {
+      final recipes = await localDataSource.getFavoriteRecipes();
+      return Right(recipes); // RecipeModel extends Recipe, so it's already the entity
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
     }
   }
 } 

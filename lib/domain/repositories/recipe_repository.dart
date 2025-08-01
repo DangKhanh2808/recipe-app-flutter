@@ -16,4 +16,9 @@ abstract class RecipeRepository {
   Future<Either<Failure, List<RecipeCategory>>> getCategories();
   Future<Either<Failure, List<RecipeArea>>> getAreas();
   Future<Either<Failure, List<RecipeIngredient>>> getIngredients();
+  
+  // Favorite methods
+  Future<Either<Failure, bool>> toggleFavoriteRecipe(String recipeId);
+  Future<Either<Failure, bool>> isFavoriteRecipe(String recipeId);
+  Future<Either<Failure, List<Recipe>>> getFavoriteRecipes();
 } 

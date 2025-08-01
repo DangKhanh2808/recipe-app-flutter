@@ -6,6 +6,9 @@ import '../../domain/entities/recipe.dart';
 import '../blocs/video_recipe/video_recipe_bloc.dart';
 import '../blocs/video_recipe/video_recipe_events.dart';
 import '../blocs/video_recipe/video_recipe_states.dart';
+import '../blocs/favorite/favorite_bloc.dart';
+import '../blocs/favorite/favorite_events.dart';
+import '../blocs/favorite/favorite_states.dart';
 import '../widgets/cards/video_recipe_card.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 import 'video_player_page.dart';
@@ -42,8 +45,15 @@ class _VideoRecipePageState extends State<VideoRecipePage>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<VideoRecipeBloc>()..add(const VideoRecipeStarted()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => getIt<VideoRecipeBloc>()..add(const VideoRecipeStarted()),
+        ),
+        BlocProvider(
+          create: (context) => getIt<FavoriteBloc>()..add(const LoadFavorites()),
+        ),
+      ],
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: _buildAppBar(),
@@ -418,17 +428,41 @@ class VideoRecipeListCard extends StatelessWidget {
                         ),
                         const Spacer(),
                         // Like button
-                        IconButton(
-                          onPressed: () {
-                            // TODO: Handle like
+                        BlocBuilder<FavoriteBloc, FavoriteState>(
+                          builder: (context, favoriteState) {
+                            final isFavorite = favoriteState is FavoriteLoaded 
+                                ? favoriteState.favoriteStatus[recipe.id] ?? false
+                                : false;
+                            final isLoading = favoriteState is FavoriteLoaded 
+                                ? favoriteState.isLoading
+                                : false;
+                            
+                            return IconButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      context.read<FavoriteBloc>().add(
+                                        ToggleFavorite(recipe.id),
+                                      );
+                                    },
+                              icon: isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(
+                                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                                      color: isFavorite ? AppColors.error : Colors.white,
+                                      size: 20,
+                                    ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            );
                           },
-                          icon: const Icon(
-                            Icons.favorite_border,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
                         ),
                       ],
                     ),
@@ -570,17 +604,41 @@ class RecipeListCard extends StatelessWidget {
                         ),
                         const Spacer(),
                         // Like button
-                        IconButton(
-                          onPressed: () {
-                            // TODO: Handle like
+                        BlocBuilder<FavoriteBloc, FavoriteState>(
+                          builder: (context, favoriteState) {
+                            final isFavorite = favoriteState is FavoriteLoaded 
+                                ? favoriteState.favoriteStatus[recipe.id] ?? false
+                                : false;
+                            final isLoading = favoriteState is FavoriteLoaded 
+                                ? favoriteState.isLoading
+                                : false;
+                            
+                            return IconButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      context.read<FavoriteBloc>().add(
+                                        ToggleFavorite(recipe.id),
+                                      );
+                                    },
+                              icon: isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    )
+                                  : Icon(
+                                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                                      color: isFavorite ? AppColors.error : AppColors.textSecondary,
+                                      size: 20,
+                                    ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            );
                           },
-                          icon: const Icon(
-                            Icons.favorite_border,
-                            color: AppColors.textSecondary,
-                            size: 20,
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
                         ),
                       ],
                     ),

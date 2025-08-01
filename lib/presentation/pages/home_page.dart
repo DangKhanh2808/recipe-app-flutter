@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/di/injection.dart';
+import '../../domain/entities/recipe.dart';
 import '../blocs/home/home_bloc.dart';
 import '../blocs/home/home_events.dart';
 import '../blocs/home/home_states.dart';
-import '../widgets/cards/recipe_card.dart';
 import '../widgets/cards/video_recipe_card.dart';
-import '../widgets/cards/category_card.dart';
 import '../widgets/cards/category_recipe_card.dart';
 import '../widgets/common/search_bar_widget.dart';
-import '../widgets/filters/category_filter_widget.dart';
-import 'onboarding_page.dart';
+import '../widgets/filter/category_filter_widget.dart';
+import '../widgets/reusable/section_header.dart';
+import '../widgets/reusable/ingredient_tags.dart';
+import '../widgets/reusable/recent_recipes_section.dart';
 import 'recipe_detail_page.dart';
 import 'video_player_page.dart';
 
@@ -179,7 +180,13 @@ class HomeView extends StatelessWidget {
         
         // Featured Video Recipes
         SliverToBoxAdapter(
-          child: _buildSectionHeader('Món nổi bật', 'Xem tất cả'),
+          child: SectionHeader(
+            title: 'Món nổi bật',
+            actionText: 'Xem tất cả',
+            onActionPressed: () {
+              // Navigate to see all
+            },
+          ),
         ),
         SliverToBoxAdapter(
           child: Container(
@@ -210,9 +217,41 @@ class HomeView extends StatelessWidget {
           ),
         ),
         
+        // Recent Recipes Section
+        SliverToBoxAdapter(
+          child: RecentRecipesSection(
+            recipes: state.recentRecipes,
+            onRecipeTap: (recipe) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecipeDetailPage(recipe: recipe),
+                ),
+              );
+            },
+          ),
+        ),
+        
+        // Ingredients Section
+        SliverToBoxAdapter(
+          child: IngredientTags(
+            ingredients: state.ingredients,
+            selectedIngredientId: state.selectedIngredientId,
+            onIngredientSelected: (ingredientId) {
+              context.read<HomeBloc>().add(HomeIngredientSelected(ingredientId));
+            },
+          ),
+        ),
+        
         // Category Filters
         SliverToBoxAdapter(
-          child: _buildSectionHeader('Danh mục', 'Xem tất cả'),
+          child: SectionHeader(
+            title: 'Danh mục',
+            actionText: 'Xem tất cả',
+            onActionPressed: () {
+              // Navigate to see all
+            },
+          ),
         ),
         SliverToBoxAdapter(
           child: CategoryFilterWidget(
@@ -261,36 +300,5 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, [String? actionText]) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          if (actionText != null)
-            TextButton(
-              onPressed: () {
-                // Navigate to see all
-              },
-              child: Text(
-                actionText,
-                style: const TextStyle(
-                  color: AppColors.primary500,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+
 } 
